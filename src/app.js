@@ -42,9 +42,7 @@ app.post("/participants", async (req, res) => {
 
     try{
        const participante = await db.collection("participants").findOne({name: name})
-       if(participante){
-            return res.sendStatus(409)
-       }
+       if(participante) return res.sendStatus(409)
 
        const horario = Date.now()
        await db.collection("participants").insertOne({name, lastStatus: horario})
@@ -75,7 +73,25 @@ app.get("/participants", async (req, res) => {
 })
 
 app.post("/messages", async (req, res) => {
-    
+    const {to, text, type} = req.body
+    const {user} = req.body
+
+    const validation = mensagemSchema.validate({...req.body, from: user}, {abortEarly: false})
+    if(validation.error){
+        return res.status(422).send(validation.error.details.map(detail => detail.message))
+    }
+  
+    try{
+        const participante = await db.collection("participants").findOne({name: user})
+        if(!participante) return res.sendStatus(422)
+
+        const mensagem = {...req.body, from: user, time: dayjs().format("HH.mm.ss")}
+        await db.collection("messages").insertOne(mensagem)
+        res.sendStatus(201)
+    } catch (err) {
+        res.status(500).send(err.message)
+    }
+
 })
 
 app.get("/messages", async (req, res) => {
