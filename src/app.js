@@ -74,7 +74,7 @@ app.get("/participants", async (req, res) => {
 
 app.post("/messages", async (req, res) => {
     const {to, text, type} = req.body
-    const {user} = req.body
+    const {user} = req.headers
 
     const validation = mensagemSchema.validate({...req.body, from: user}, {abortEarly: false})
     if(validation.error){
