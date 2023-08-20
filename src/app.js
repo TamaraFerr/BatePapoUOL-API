@@ -2,6 +2,7 @@ import cors from "cors"
 import dayjs from "dayjs"
 import dotenv from "dotenv"
 import express from "express"
+import Joi from "joi"
 import { MongoClient } from "mongodb"
 
 const app = express()
@@ -21,12 +22,12 @@ try {
 const db = mongoClient.db()
 
 //schemas
-const participanteSchema = joi.object({name: joi.string().required()})
-const mensagemSchema = joi.object({
-    from: joi.string().required(),
-    to: joi.string().required(),
-    text: joi.string().required(),
-    type: joi.string().required().valid("message", "private_message")
+const participanteSchema = Joi.object({name: Joi.string().required()})
+const mensagemSchema = Joi.object({
+    from: Joi.string().required(),
+    to: Joi.string().required(),
+    text: Joi.string().required(),
+    type: Joi.string().required().valid("message", "private_message")
 })
 
 //endpoints
@@ -84,7 +85,6 @@ app.get("/messages", async (req, res) => {
 app.post("/status", async (req, res) => {
     
 })
-
 
 
 const PORT = 5000
