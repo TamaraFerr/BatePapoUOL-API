@@ -34,18 +34,18 @@ const mensagemSchema = Joi.object({
 app.post("/participants", async (req, res) => {
     const {name} = req.body
 
-    const validation = participanteSchema.validate(req.body, {abortEarly: false})
-    if(validation.error){
+    
+    const validation = participanteSchema.validate({ name: name }, { abortEarly: false })
+    if (validation.error) {
         return res.status(422).send(validation.error.details.map(detail => detail.message))
     }
-    res.sendStatus(201)
 
-    try{
-        const participante = await db.collection("participants").findOne({name: name})
-        if(participante) return res.sendStatus(409)
+    try {
+        const participante = await db.collection("participants").findOne({ name: name })
+        if (participante) return res.sendStatus(409)
 
         const horario = Date.now()
-        await db.collection("participants").insertOne({name, lastStatus: horario})
+        await db.collection("participants").insertOne({ name: name, lastStatus: horario })
 
         const mensagem = {
             from: name,
@@ -58,13 +58,13 @@ app.post("/participants", async (req, res) => {
         await db.collection("messages").insertOne(mensagem)
 
         res.sendStatus(201)
-    } catch(err){
+    } catch (err) {
         res.status(500).send(err.message)
     }
 })
 
 app.get("/participants", async (req, res) => {
-    try{
+    try {
         const participantes = await db.collection("participants").find().toArray()
         res.send(participantes)
     } catch (err) {
@@ -76,22 +76,23 @@ app.post("/messages", async (req, res) => {
     const {to, text, type} = req.body
     const {user} = req.headers
 
-    const validation = mensagemSchema.validate({...req.body, from: user}, {abortEarly: false})
-    if(validation.error){
+
+    const validation = mensagemSchema.validate({...req.body, from: user}, { abortEarly: false })
+    if (validation.error) {
         return res.status(422).send(validation.error.details.map(detail => detail.message))
     }
-  
-    try{
-        const participante = await db.collection("participants").findOne({name: user})
-        if(!participante) return res.sendStatus(422)
 
-        const mensagem = {...req.body, from: user, time: dayjs().format("HH.mm.ss")}
+    try {
+        const participante = await db.collection("participants").findOne({name: user})
+        if (!participante) return res.sendStatus(422)
+
+        const mensagem = { ...req.body, from: user, time: dayjs().format("HH:mm:ss") }
         await db.collection("messages").insertOne(mensagem)
         res.sendStatus(201)
+
     } catch (err) {
         res.status(500).send(err.message)
     }
-
 })
 
 app.get("/messages", async (req, res) => {
