@@ -1,4 +1,5 @@
 import cors from "cors"
+import dayjs from "dayjs"
 import dotenv from "dotenv"
 import express from "express"
 import { MongoClient } from "mongodb"
@@ -29,9 +30,38 @@ const mensagemSchema = joi.object({
 })
 
 //endpoints
-
 app.post("/participants", async (req, res) => {
+    const {name} = req.body
 
+    const validation = participanteSchema.validate(req.body, {abortEarly: false})
+    if(validation.error){
+        return res.status(422).send(validation.error.details.map(detail => detail.message))
+    }
+    res.sendStatus(201)
+
+    try{
+       const participante = await db.collection("participants").findOne({name: name})
+       if(participante){
+            return res.sendStatus(409)
+       }
+
+       const horario = Date.now()
+       await db.collection("participants").insertOne({name, lastStatus: horario})
+
+       const mensagem = {
+        from: name,
+        to: 'Todos',
+        text: 'entra na sala...',
+        type: 'status',
+        time: dayjs(horario).format("HH:mm:ss")
+       }
+
+       await db.collection("messages").insertOne(mensagem)
+
+        res.sendStatus(201)
+    } catch(err){
+        res.status(500).send(err.message)
+    }
 })
 
 app.get("/participants", async (req, res) => {
