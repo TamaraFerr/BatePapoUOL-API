@@ -41,21 +41,21 @@ app.post("/participants", async (req, res) => {
     res.sendStatus(201)
 
     try{
-       const participante = await db.collection("participants").findOne({name: name})
-       if(participante) return res.sendStatus(409)
+        const participante = await db.collection("participants").findOne({name: name})
+        if(participante) return res.sendStatus(409)
 
-       const horario = Date.now()
-       await db.collection("participants").insertOne({name, lastStatus: horario})
+        const horario = Date.now()
+        await db.collection("participants").insertOne({name, lastStatus: horario})
 
-       const mensagem = {
-        from: name,
-        to: 'Todos',
-        text: 'entra na sala...',
-        type: 'status',
-        time: dayjs(horario).format("HH:mm:ss")
-       }
+        const mensagem = {
+            from: name,
+            to: 'Todos',
+            text: 'entra na sala...',
+            type: 'status',
+            time: dayjs(horario).format("HH:mm:ss")
+        }
 
-       await db.collection("messages").insertOne(mensagem)
+        await db.collection("messages").insertOne(mensagem)
 
         res.sendStatus(201)
     } catch(err){
