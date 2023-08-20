@@ -96,7 +96,25 @@ app.post("/messages", async (req, res) => {
 })
 
 app.get("/messages", async (req, res) => {
-    
+    const {user} = req.headers
+    const {limit} = req.query
+    const limiteNumerado = Number(limit)
+
+    if(limit !== undefined && (limiteNumerado <= 0 || isNaN(limiteNumerado))){
+        return res.sendStatus(422)
+    } 
+
+    try {
+        const mensagens = await db.collection("messages")
+        .find({$or: [{from: user}, {to:"Todos"}, {to: user}, {type: "message"}]})
+        .limit(limit === undefined ? 0 : limiteNumerado)
+        .sort(({$natural: -1}))
+        .toArray()
+
+        res.send(mensagens)
+    } catch (err) {
+        res.status(500).send(err.message)
+    }
 })
 
 app.post("/status", async (req, res) => {
