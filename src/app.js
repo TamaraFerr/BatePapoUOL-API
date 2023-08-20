@@ -118,7 +118,20 @@ app.get("/messages", async (req, res) => {
 })
 
 app.post("/status", async (req, res) => {
-    
+    const {user} = req.headers
+
+    if (!user) return res.sendStatus(404)
+
+    try{
+        const status = await db.collection("participants").updateOne({name: user}, {$set: {lastStatus: Date.now()}})
+        if(status.matchedCount === 0){
+            return res.sendStatus(404)
+        }
+            
+        res.sendStatus(200)
+    } catch (err){
+        res.status(500).send(err.message)
+    }
 })
 
 
