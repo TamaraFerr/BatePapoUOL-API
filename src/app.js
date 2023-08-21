@@ -134,6 +134,33 @@ app.post("/status", async (req, res) => {
     }
 })
 
+setInterval(async () => {
+    const segundos = Date.now() - 10000
+
+    try {
+        const participanteInativo = await db.collection("participants").find({ lastStatus: { $lt: segundos } }).toArray()
+
+        if (participanteInativo.length > 0) {
+
+            const mensagens = participanteInativo.map(participanteInativo => {
+                return {
+                    from: participanteInativo.name,
+                    to: 'Todos',
+                    text: 'sai da sala...',
+                    type: 'status',
+                    time: dayjs().format("HH:mm:ss")
+                }
+            })
+
+            await db.collection("messages").insertMany(mensagens)
+
+            await db.collection("participants").deleteMany({ lastStatus: { $lt: segundos } })
+        }
+
+    } catch (err) {
+        console.log(err.message)
+    }
+}, 15000)
 
 const PORT = 5000
 app.listen(PORT, () => console.log(`Eba! Server rodando na porta ${PORT}`))
